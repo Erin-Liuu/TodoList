@@ -12,43 +12,55 @@
               >{{ tab.name }}</a
             >
           </li>
+          <button>
+            <i
+              class="bi me-1"
+              @click="toggleSort"
+              :class="[
+                sortDirection > 0 ? 'bi-sort-down' : 'bi-sort-up',
+                sortToggle ? 'text-primary' : '',
+              ]"
+            ></i>
+          </button>
         </ul>
       </div>
-      <button>
-        <i class="bi bi-star-fill text-warning" @click="toggleSort"></i>
-      </button>
       <ul class="list-group list-group-flush text-left">
         <draggable
           v-model="todoStore.todos"
           handle=".drag-handle"
           item-key="id"
-          tag="ul"
+          tag="div"
+          @change="updateSort"
         >
           <template #item="{ element: item }">
             <li
-              class="list-group-item d-flex"
-              v-if="item.id !== cacheTask.id && showItem(item)"
+              class="list-group-item"
+              v-if="showItem(item)"
               :class="{ starred: item.starred }"
             >
-              <i
-                class="bi bi-three-dots-vertical drag-handle"
-                style="cursor: move"
-              ></i>
-              <div class="form-check flex-grow-1">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  :id="item.id"
-                  v-model="item.completed"
-                />
-                <label class="form-check-label" :for="item.id">
-                  <span :class="{ completed: item.completed }">
-                    {{ item.taskName }}
-                  </span>
-                  <div class="d-flex gap-2 text-muted small">
+              <div class="d-flex">
+                <i
+                  class="bi bi-three-dots-vertical drag-handle"
+                  style="cursor: move"
+                ></i>
+                <div class="form-check flex-grow-1 text-start">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    :id="item.id"
+                    v-model="item.completed"
+                  />
+                  <label class="form-check-label ms-2" :for="item.id">
+                    <span :class="{ completed: item.completed }">
+                      {{ item.taskName }}
+                    </span>
+                  </label>
+                  <div
+                    class="d-flex gap-2 text-muted mt-2 ps-1 align-items-center small"
+                  >
                     <span
-                      v-if="isExpired(item.deadline) & !item.completed"
-                      class="badge bg-secondary ms-2"
+                      v-if="isExpired(item.deadline) && !item.completed"
+                      class="badge rounded-pill bg-secondary"
                       >已過期</span
                     >
                     <span
@@ -60,29 +72,46 @@
                       <i class="bi bi-calendar-week" v-if="item.deadline"></i>
                       {{ formatDate(item.deadline) }}
                     </span>
-                    <i class="bi bi-chat-dots" v-if="item.comment"></i>
+                    <i
+                      class="bi bi-chat-dots"
+                      v-if="item.comment"
+                      @click="toggleComment(item.id)"
+                      style="cursor: pointer"
+                      :class="{ 'text-primary': item.id === showCommentId }"
+                    ></i>
                   </div>
-                </label>
+                </div>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn" @click="todoStore.toggleStar(item.id)">
+                    <i
+                      class="bi bi-star-fill text-warning"
+                      v-if="item.starred"
+                    ></i>
+                    <i class="bi bi-star" v-else></i>
+                  </button>
+                  <button class="btn" @click="openEditDialog(item)">
+                    <i
+                      class="bi bi-pencil-fill text-primary"
+                      v-if="item.id === editData.id"
+                    ></i>
+                    <i class="bi bi-pencil-fill" v-else></i>
+                  </button>
+                  <button class="btn" @click="deleteTask(item)">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
               </div>
-              <div class="btn-group btn-group-sm">
-                <button class="btn" @click="todoStore.toggleStar(item.id)">
-                  <i
-                    class="bi bi-star-fill text-warning"
-                    v-if="item.starred"
-                  ></i>
-                  <i class="bi bi-star" v-else></i>
-                </button>
-                <button class="btn" @click="openEditDialog(item)">
-                  <i
-                    class="bi bi-pencil-fill text-primary"
-                    v-if="item.id === editData.id"
-                  ></i>
-                  <i class="bi bi-pencil-fill" v-else></i>
-                </button>
-                <button class="btn" @click="deleteTask(item)">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
+
+              <transition name="accordion">
+                <div class="mt-2 pt-1 pb-2" v-if="showCommentId === item.id">
+                  <textarea
+                    class="form-control"
+                    rows="2"
+                    v-model="item.comment"
+                    disabled
+                  ></textarea>
+                </div>
+              </transition>
             </li>
           </template>
         </draggable>
@@ -123,11 +152,8 @@
           </div>
           <div>
             備註
-            <input
-              type="text"
-              class="form-control"
-              v-model="editData.comment"
-            />
+            <textarea class="form-control" v-model="editData.comment" row="3">
+            </textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -192,6 +218,10 @@ const headerTabs = [
   {
     name: "已完成",
     value: "done",
+  },
+  {
+    name: "最愛",
+    value: "favorite",
   },
 ];
 const visibilityTab = ref(headerTabs[0].value);
@@ -260,13 +290,11 @@ const showItem = (item) => {
   if (visibilityTab.value === "allItem") return true;
   if (visibilityTab.value === "processing") return !item.completed;
   if (visibilityTab.value === "done") return item.completed;
+  if (visibilityTab.value === "favorite") return item.starred;
 };
 
 function isExpired(time) {
   if (!time) return false;
-  console.log(new Date(time));
-  console.log(new Date());
-
   return new Date(time) < new Date();
 }
 const formatDate = (time) => {
@@ -279,19 +307,29 @@ const formatDate = (time) => {
   return yy + "/" + mm + "/" + dd;
 };
 const sortDirection = ref(1); // 1: 升序, -1: 降序
+const sortToggle = ref(false);
 
-function toggleSort() {
+const toggleSort = () => {
   sortDirection.value *= -1;
+  sortToggle.value = true;
   todoStore.todos.sort((a, b) => {
     if (a.completed !== b.completed) {
-      return (a.completed ? 1 : -1) * sortDirection.value;
+      return a.completed ? 1 : -1;
     }
     return (
       (new Date(a.deadline || 0) - new Date(b.deadline || 0)) *
       sortDirection.value
     );
   });
-}
+};
+const updateSort = () => {
+  sortToggle.value = false;
+};
+
+const showCommentId = ref(null);
+const toggleComment = (id) => {
+  showCommentId.value = showCommentId.value === id ? null : id;
+};
 const filteredList = computed(() => {
   return;
   let allTab = headerTabs[0].value;
@@ -342,5 +380,22 @@ const uncompletedPrompt = computed(() => {
 }
 .drag-handle:hover {
   color: #0d6efd;
+}
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.accordion-enter-to,
+.accordion-leave-from {
+  max-height: 200px; /* 根據內容高度調整 */
+  opacity: 1;
 }
 </style>
