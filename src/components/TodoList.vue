@@ -303,10 +303,20 @@ const toggleSort = () => {
     if (a.completed !== b.completed) {
       return a.completed ? 1 : -1;
     }
-    return (
-      (new Date(a.deadline || 0) - new Date(b.deadline || 0)) *
-      sortDirection.value
-    );
+
+    // deadline 排序（有 deadline > 沒有 deadline）
+    const aHasDeadline = !!a.deadline;
+    const bHasDeadline = !!b.deadline;
+
+    if (aHasDeadline && !bHasDeadline) return -1;
+    if (!aHasDeadline && bHasDeadline) return 1;
+
+    // deadline 時間先後
+    if (aHasDeadline && bHasDeadline) {
+      return (
+        (new Date(a.deadline) - new Date(b.deadline)) * sortDirection.value
+      );
+    }
   });
 };
 const updateSort = () => {
@@ -339,8 +349,6 @@ const uncompletedPrompt = computed(() => {
   let message = "列表上沒有任務";
   let count = 0;
   let todoList = todoStore.todos;
-
-  console.log(todoList);
 
   if (!todoList || todoList.length <= 0) {
     return message;
