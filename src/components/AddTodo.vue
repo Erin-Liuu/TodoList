@@ -1,8 +1,10 @@
 <template>
-  <div id="app" class="container my-3">
+  <div class="container my-5 col-md-4">
     <div class="input-group mb-3">
       <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon1">待辦事項</span>
+        <span class="input-group-text bg-custom text-costom" id="basic-addon1"
+          >待辦事項</span
+        >
       </div>
       <input
         v-model="text"
@@ -11,7 +13,11 @@
         placeholder="準備要做的任務"
       />
       <div class="input-group-append">
-        <button class="btn btn-primary" type="button" @click="openEditDialog">
+        <button
+          class="btn btn-highlight text-costom"
+          type="button"
+          @click="addDialog"
+        >
           新增
         </button>
       </div>
@@ -28,20 +34,20 @@ const todoStore = useTodoStore();
 
 const text = ref("");
 
-
-const emit = defineEmits(["addTodo"]);
-const updateList = () => {
-  // todoStore.addTask(text.value)
-  // emit("addTodo", {
-  //   id: crypto.randomUUID(),
-  //   taskName: text.value,
-  //   complete: false,
-  // });
-};
-const openEditDialog = () => {
+const addDialog = () => {
   todoStore.addTask(text.value);
+  todoStore.sortToggle = false;
 };
-
 </script>
-<style>
+<style scoped>
+.text-costom {
+  /* color: #4b5056; */
+  color: black;
+}
+.bg-custom {
+  background: linear-gradient(to bottom, #f4b398, #f7cab6);
+}
+.btn-highlight {
+  background: linear-gradient(to bottom, #fdac58, #ff8221);
+}
 </style>

@@ -1,32 +1,32 @@
 <template>
-  <AddTodo @addTodo="handleAddTodo" />
-  <TodoList :todos="todos" @delete-all="handleDeleteAll" />
+  <div
+    class="col-md-12 bg-header"
+    style="font-family: 'Inter', 'Noto Sans TC', sans-serif"
+  >
+    <h1
+      class="position-absolute m-3 text-white"
+      style="font-family: Tektur, sans-serif"
+    >
+      TODO List
+    </h1>
+    <AddTodo />
+    <TodoList />
+  </div>
 </template>
 <script setup>
 import AddTodo from "./components/AddTodo.vue";
 import TodoList from "./components/TodoList.vue";
-import { ref } from "vue";
-
-const todos = ref([
-  {
-    id: 1,
-    taskName: "Test",
-    completed: true,
-  },
-  {
-    id: 2,
-    taskName: "Test2",
-    completed: false,
-  }
-]);
-
-const handleAddTodo = (todo) => {
-  todos.value.push(todo);
-  console.log(todos.value);
-};
-const handleDeleteAll = () => {
-  todos.value = [];
-};
 </script>
-<style>
+<style scoped>
+.bg-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* background: linear-gradient(to right, #a18cd1, #9cdef7); */
+  background: linear-gradient(160deg, #2b2b5f, #0fa2dc);
+  /* min-height: 100vh; */
+  height: 15rem;
+  width: 100vw;
+  /* background-size: cover; */
+}
 </style>

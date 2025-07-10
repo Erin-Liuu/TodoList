@@ -1,31 +1,32 @@
 <template>
-  <div class="container my-3">
+  <div class="container my-3 col-md-4">
     <div class="text-center">
-      <div class="card-header">
+      <div class="card-header bg-custom-1">
         <ul class="nav nav-tabs card-header-tabs">
           <li class="nav-item" v-for="tab in headerTabs" :key="tab.name">
             <a
-              class="nav-link"
+              class="nav-link text-costom"
               href="#"
               :class="{ active: visibilityTab == tab.value }"
               @click="visibilityTab = tab.value"
               >{{ tab.name }}</a
             >
           </li>
-          <button>
+          <button class="btn ms-5">
             <i
-              class="bi me-1"
+              class="bi"
               @click="toggleSort"
               :class="[
                 sortDirection > 0 ? 'bi-sort-down' : 'bi-sort-up',
-                sortToggle ? 'text-primary' : '',
+                todoStore.sortToggle ? 'text-primary' : '',
               ]"
             ></i>
           </button>
         </ul>
       </div>
-      <ul class="list-group list-group-flush text-left">
+      <div class="card-list p-3 bg-custom card-list-scroll">
         <draggable
+          class="d-flex flex-column gap-2"
           v-model="todoStore.todos"
           handle=".drag-handle"
           item-key="id"
@@ -33,52 +34,67 @@
           @change="updateSort"
         >
           <template #item="{ element: item }">
-            <li
-              class="list-group-item"
+            <div
+              class="card-flash card-hover shadow-sm rounded-3"
               v-if="showItem(item)"
-              :class="{ starred: item.starred }"
+              :class="[item.starred ? 'starred' : 'bg-white']"
             >
-              <div class="d-flex">
+              <div
+                class="card-body d-flex align-items-center px-1 position-relative"
+              >
                 <i
-                  class="bi bi-three-dots-vertical drag-handle"
+                  class="bi bi-three-dots-vertical drag-handle me-2"
                   style="cursor: move"
                 ></i>
-                <div class="form-check flex-grow-1 text-start">
+                <div class="form-check d-flex align-items-center flex-grow-1">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    class="form-check-input form-check-custom me-2"
                     :id="item.id"
                     v-model="item.completed"
                   />
-                  <label class="form-check-label ms-2" :for="item.id">
-                    <span :class="{ completed: item.completed }">
-                      {{ item.taskName }}
-                    </span>
-                  </label>
-                  <div
-                    class="d-flex gap-2 text-muted mt-2 ps-1 align-items-center small"
-                  >
-                    <span
-                      v-if="isExpired(item.deadline) && !item.completed"
-                      class="badge rounded-pill bg-secondary"
-                      >已過期</span
+                  <div class="d-flex flex-column justify-content-center">
+                    <label
+                      class="form-check-label d-flex align-items-center ms-2"
+                      :for="item.id"
                     >
-                    <span
-                      :class="{
-                        'text-danger':
-                          isExpired(item.deadline) & !item.completed,
-                      }"
+                      <h6
+                        class="card-title my-2"
+                        :class="{ completed: item.completed }"
+                      >
+                        {{ item.taskName }}
+                      </h6>
+                    </label>
+                    <div
+                      class="d-flex gap-2 text-muted align-items-center position-absolute end-1 bottom-0 ms-2 mb-1"
+                      style="font-size: 0.84rem"
+                      v-if="
+                        item.deadline ||
+                        (isExpired(item.deadline) && !item.completed)
+                      "
                     >
-                      <i class="bi bi-calendar-week" v-if="item.deadline"></i>
-                      {{ formatDate(item.deadline) }}
-                    </span>
-                    <i
-                      class="bi bi-chat-dots"
-                      v-if="item.comment"
-                      @click="toggleComment(item.id)"
-                      style="cursor: pointer"
-                      :class="{ 'text-primary': item.id === showCommentId }"
-                    ></i>
+                      <span
+                        v-if="isExpired(item.deadline) && !item.completed"
+                        class="badge rounded-pill bg-secondary"
+                        >已過期</span
+                      >
+                      <span
+                        :class="{
+                          'text-danger':
+                            isExpired(item.deadline) & !item.completed,
+                        }"
+                      >
+                        <i class="bi bi-calendar-week" v-if="item.deadline"></i>
+                        {{ formatDate(item.deadline) }}
+                      </span>
+                      <i
+                        class="bi bi-chat-dots"
+                        v-if="item.comment"
+                        @click="toggleComment(item.id)"
+                        style="cursor: pointer"
+                        :class="{ 'text-primary': item.id === showCommentId }"
+                      ></i>
+                    </div>
                   </div>
                 </div>
                 <div class="btn-group btn-group-sm">
@@ -103,7 +119,10 @@
               </div>
 
               <transition name="accordion">
-                <div class="mt-2 pt-1 pb-2" v-if="showCommentId === item.id">
+                <div
+                  class="ms-4 me-2 pt-1 pb-2"
+                  v-if="showCommentId === item.id"
+                >
                   <textarea
                     class="form-control"
                     rows="2"
@@ -112,12 +131,14 @@
                   ></textarea>
                 </div>
               </transition>
-            </li>
+            </div>
           </template>
         </draggable>
-      </ul>
+      </div>
 
-      <div class="card-footer d-flex justify-content-between">
+      <div
+        class="card-footer d-flex justify-content-between bg-custom-1 text-costom"
+      >
         <span>{{ uncompletedPrompt }}</span>
         <a href="#" @click.prevent="deleteAllTask()">清除所有任務</a>
       </div>
@@ -133,14 +154,18 @@
   >
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header bg-custom">
           <h5 class="modal-title">編輯待辦事項</h5>
           <button type="button" class="btn-close" @click="closeDialog"></button>
         </div>
-        <div class="modal-body text-left">
+        <div class="modal-body text-start">
           <div>
             任務名稱
-            <input type="text" class="form-control" v-model="editData.text" />
+            <input
+              type="text"
+              class="form-control mb-3"
+              v-model="editData.text"
+            />
           </div>
           <div>
             截止日期
@@ -157,8 +182,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeDialog">取消</button>
-          <button class="btn btn-primary" @click="updateDialogEdit">
+          <button class="btn btn-cancel" @click="closeDialog">取消</button>
+          <button class="btn btn-highlight" @click="updateDialogEdit">
             儲存
           </button>
         </div>
@@ -180,8 +205,10 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.min.css";
 
 const todoStore = useTodoStore();
-console.log(todoStore);
-console.log(todoStore.todos);
+// console.log(todoStore);
+// console.log(todoStore.todos);
+
+let sortToggle = todoStore.sortToggle;
 
 const props = defineProps({
   todos: {
@@ -189,22 +216,6 @@ const props = defineProps({
     default: [],
   },
 });
-const emit = defineEmits(["delete-all"]);
-
-// //副本
-// const todos_local = ref([...props.todos]);
-
-// // 如果父層資料變動，也更新副本
-// watch(
-//   () => props.todos,
-//   (newVal) => {
-//     todos_local.value = [...newVal];
-//   }
-// );
-// // // 拖曳後回傳更新結果給父層
-// // const onDragEnd = () => {
-// //   emit('update:items', localItems.value)
-// // }
 
 const headerTabs = [
   {
@@ -225,9 +236,10 @@ const headerTabs = [
   },
 ];
 const visibilityTab = ref(headerTabs[0].value);
-const cacheTaskName = ref("");
-let cacheTask = {};
 const isEdit = ref(false);
+const sortDirection = ref(1); // 1: 升序, -1: 降序
+const showCommentId = ref(null);
+
 let editData = reactive({
   id: null,
   text: "",
@@ -239,33 +251,10 @@ const deleteTask = (task) => {
   let removeIndex = props.todos.findIndex((item) => {
     return item.id === task.id;
   });
-  // props.todos.splice(removeId, 1);
   todoStore.deleteTask(removeIndex);
 };
 const deleteAllTask = () => {
-  //須從父層移除
-  emit("delete-all");
-};
-const editTask = (item) => {
-  isEdit = true;
-  cacheTask = item;
-  cacheTaskName.value = item.taskName;
-};
-const cancelEdit = () => {
-  isEdit = false;
-  cacheTask = {};
-  cacheTaskName.value = "";
-};
-const doneEdit = (item) => {
-  isEdit = false;
-  item.taskName = cacheTaskName.value;
-  cacheTask = {};
-  cacheTaskName.value = "";
-};
-const lostFocus = (item) => {
-  if (isEdit) {
-    doneEdit(item);
-  }
+  todoStore.deleteAllTask();
 };
 
 const openEditDialog = (task) => {
@@ -306,12 +295,10 @@ const formatDate = (time) => {
   const dd = d.getDate();
   return yy + "/" + mm + "/" + dd;
 };
-const sortDirection = ref(1); // 1: 升序, -1: 降序
-const sortToggle = ref(false);
 
 const toggleSort = () => {
+  todoStore.sortToggle = true;
   sortDirection.value *= -1;
-  sortToggle.value = true;
   todoStore.todos.sort((a, b) => {
     if (a.completed !== b.completed) {
       return a.completed ? 1 : -1;
@@ -323,10 +310,9 @@ const toggleSort = () => {
   });
 };
 const updateSort = () => {
-  sortToggle.value = false;
+  todoStore.sortToggle = false;
 };
 
-const showCommentId = ref(null);
 const toggleComment = (id) => {
   showCommentId.value = showCommentId.value === id ? null : id;
 };
@@ -352,9 +338,11 @@ const filteredList = computed(() => {
 const uncompletedPrompt = computed(() => {
   let message = "列表上沒有任務";
   let count = 0;
-  let todoList = props.todos;
+  let todoList = todoStore.todos;
 
-  if (todoList.length <= 0) {
+  console.log(todoList);
+
+  if (!todoList || todoList.length <= 0) {
     return message;
   }
 
@@ -371,15 +359,66 @@ const uncompletedPrompt = computed(() => {
   return message;
 });
 </script>
-<style>
+<style scoped>
+.card-list-scroll {
+  max-height: 325px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
+}
+
+::v-deep(.card-list-scroll::-webkit-scrollbar) {
+  width: 8px;
+}
+::v-deep(.card-list-scroll::-webkit-scrollbar-thumb) {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+::v-deep(.card-list-scroll::-webkit-scrollbar-thumb:hover) {
+  background-color: rgba(255, 0, 0, 0.6);
+}
+.form-check-custom {
+  width: 1.4rem;
+  height: 1.4rem;
+  /* margin-top: 1.2rem; */
+  border-radius: 50%;
+}
+
 .completed {
   text-decoration: line-through;
 }
 .starred {
   background: lightyellow;
 }
+.text-costom {
+  color: #4b5056;
+}
+.text-highlight {
+  color: #ac7968;
+}
+.bg-custom {
+  backdrop-filter: blur(8px);
+  background: rgb(141, 172, 164, 0.5);
+}
+.bg-custom-1 {
+  background: rgba(200, 209, 204, 1);
+}
+.bg-custom-2 {
+  background: linear-gradient(to bottom, #f4b398, #f7cab6);
+}
+.btn-highlight {
+  background: linear-gradient(to bottom, #fdac58, #ff8221);
+}
+.btn-cancel {
+  background: linear-gradient(to bottom, #ccc, #8a8989);
+}
 .drag-handle:hover {
-  color: #0d6efd;
+  color: #83b7cc;
+}
+.card-hover:hover {
+  border-left: 4px solid #0d6efd;
 }
 .accordion-enter-active,
 .accordion-leave-active {
