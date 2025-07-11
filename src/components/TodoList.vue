@@ -248,7 +248,7 @@ let editData = reactive({
 });
 
 const deleteTask = (task) => {
-  let removeIndex = props.todos.findIndex((item) => {
+  let removeIndex = todoStore.todos.findIndex((item) => {
     return item.id === task.id;
   });
   todoStore.deleteTask(removeIndex);

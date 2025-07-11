@@ -35,8 +35,11 @@ const todoStore = useTodoStore();
 const text = ref("");
 
 const addDialog = () => {
+  if (!text.value.trim()) return;
+
   todoStore.addTask(text.value);
   todoStore.sortToggle = false;
+  text.value = "";
 };
 </script>
 <style scoped>

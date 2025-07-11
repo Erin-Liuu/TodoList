@@ -79,8 +79,7 @@ export const useTodoStore = defineStore('todo', () => {
     }
     function deleteTask(id) {
         todos.value.splice(id, 1);
-        console.log(todos.value);
-
+        // console.log(todos.value);
     }
     function deleteAllTask() {
         todos.value = []
