@@ -11,6 +11,7 @@
         type="text"
         class="form-control"
         placeholder="準備要做的任務"
+        @keyup.enter="addDialog"
       />
       <div class="input-group-append">
         <button
